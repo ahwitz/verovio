@@ -64,5 +64,47 @@ int Accid::PreparePointersByLayer(ArrayPtrVoid *params)
 
     return FUNCTOR_CONTINUE;
 }
+    
+int Accid::GetGlyphs()
+{
+    int glyphNums = 0;
+    switch (this->GetAccid())
+    {
+        case ACCIDENTAL_EXPLICIT_s:
+        case ACCIDENTAL_EXPLICIT_f:
+        case ACCIDENTAL_EXPLICIT_x:
+        case ACCIDENTAL_EXPLICIT_n:
+        case ACCIDENTAL_EXPLICIT_1qf:
+        case ACCIDENTAL_EXPLICIT_3qf:
+        case ACCIDENTAL_EXPLICIT_1qs:
+        case ACCIDENTAL_EXPLICIT_3qs:
+        case ACCIDENTAL_EXPLICIT_su:
+        case ACCIDENTAL_EXPLICIT_sd:
+        case ACCIDENTAL_EXPLICIT_fu:
+        case ACCIDENTAL_EXPLICIT_fd:
+        case ACCIDENTAL_EXPLICIT_nu:
+        case ACCIDENTAL_EXPLICIT_nd:
+            glyphNums = 1;
+            break;
+            
+        case ACCIDENTAL_EXPLICIT_ss:
+        case ACCIDENTAL_EXPLICIT_ff:
+        case ACCIDENTAL_EXPLICIT_xs:
+        case ACCIDENTAL_EXPLICIT_nf:
+        case ACCIDENTAL_EXPLICIT_ns:
+            glyphNums = 2;
+            break;
+        
+        case ACCIDENTAL_EXPLICIT_ts:
+        case ACCIDENTAL_EXPLICIT_tf:
+            glyphNums = 3;
+            break;
+            
+        default:
+            glyphNums = 0;
+            break;
+    }
+    return glyphNums;
+}
 
 } // namespace vrv

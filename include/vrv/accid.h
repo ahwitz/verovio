@@ -35,6 +35,9 @@ public:
 
     /** Override the method since alignment is required */
     virtual bool HasToBeAligned() const { return true; };
+    
+    int GetGlyphs();
+    int GetWidth() { return this->GetGlyphs() * ACCID_WIDTH; }
 
     //----------//
     // Functors //
