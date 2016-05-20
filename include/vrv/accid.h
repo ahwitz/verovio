@@ -37,8 +37,8 @@ public:
     virtual bool HasToBeAligned() const { return true; };
     
     /** Used to help determine width of the eventually drawn graphic */
-    int GetGlyphs();
-    int GetWidth() { return this->GetGlyphs() * ACCID_WIDTH; }
+    std::vector<int>* GetGlyphs();
+    int GetWidth() { return (int)this->glyphs.size() * ACCID_WIDTH; }
     
     //
     std::string AccidentalExplicitToStr(data_ACCIDENTAL_EXPLICIT data) { return AttAccidental::AccidentalExplicitToStr(data); }
@@ -60,6 +60,7 @@ public:
      * See Note::PreparePointersByLayer and View::DrawAccid
      */
     bool m_drawingCueSize;
+    std::vector<int> glyphs;
 
 private:
 };

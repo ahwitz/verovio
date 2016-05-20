@@ -14,6 +14,8 @@
 //----------------------------------------------------------------------------
 
 #include "note.h"
+#include "smufl.h"
+#include "vrv.h"
 
 namespace vrv {
 
@@ -65,46 +67,94 @@ int Accid::PreparePointersByLayer(ArrayPtrVoid *params)
     return FUNCTOR_CONTINUE;
 }
     
-int Accid::GetGlyphs()
+std::vector<int>* Accid::GetGlyphs()
 {
-    int glyphNums = 0;
-    switch (this->GetAccid())
-    {
+    // Insert glyphs into the vector in reverse order
+    this->glyphs.clear();
+    
+    switch (this->GetAccid()) {
         case ACCIDENTAL_EXPLICIT_s:
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            break;
         case ACCIDENTAL_EXPLICIT_f:
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
+            break;
         case ACCIDENTAL_EXPLICIT_x:
-        case ACCIDENTAL_EXPLICIT_n:
-        case ACCIDENTAL_EXPLICIT_1qf:
-        case ACCIDENTAL_EXPLICIT_3qf:
-        case ACCIDENTAL_EXPLICIT_1qs:
-        case ACCIDENTAL_EXPLICIT_3qs:
-        case ACCIDENTAL_EXPLICIT_su:
-        case ACCIDENTAL_EXPLICIT_sd:
-        case ACCIDENTAL_EXPLICIT_fu:
-        case ACCIDENTAL_EXPLICIT_fd:
-        case ACCIDENTAL_EXPLICIT_nu:
-        case ACCIDENTAL_EXPLICIT_nd:
-            glyphNums = 1;
+            this->glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
             break;
-            
         case ACCIDENTAL_EXPLICIT_ss:
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            break;
         case ACCIDENTAL_EXPLICIT_ff:
-        case ACCIDENTAL_EXPLICIT_xs:
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
+            break;
+        case ACCIDENTAL_EXPLICIT_n:
+            this->glyphs.push_back(SMUFL_E261_accidentalNatural);
+            break;
         case ACCIDENTAL_EXPLICIT_nf:
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
+            this->glyphs.push_back(SMUFL_E261_accidentalNatural);
+            break;
         case ACCIDENTAL_EXPLICIT_ns:
-            glyphNums = 2;
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            this->glyphs.push_back(SMUFL_E261_accidentalNatural);
             break;
-        
-        case ACCIDENTAL_EXPLICIT_ts:
+        case ACCIDENTAL_EXPLICIT_xs:
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            this->glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
+            break;
         case ACCIDENTAL_EXPLICIT_tf:
-            glyphNums = 3;
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
+            this->glyphs.push_back(SMUFL_E260_accidentalFlat);
             break;
-            
+        case ACCIDENTAL_EXPLICIT_ts:
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+            break;
+//        case ACCIDENTAL_EXPLICIT_sx:
+//            this->glyphs.push_back(SMUFL_E262_accidentalSharp);
+//            this->glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_su:
+//            this->glyphs.push_back(SMUFL_E274_accidentalThreeQuartersSharpArrowUp);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_sd:
+//            this->glyphs.push_back(SMUFL_E275_accidentalQuarterSharpArrowDown);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_fu:
+//            this->glyphs.push_back(SMUFL_E270_accidentalQuarterFlatArrowUp);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_fd:
+//            this->glyphs.push_back(SMUFL_E271_accidentalThreeQuartersFlatArrowDown);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_nu:
+//            this->glyphs.push_back(SMUFL_E272_accidentalQuarterSharpNaturalArrowUp);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_nd:
+//            this->glyphs.push_back(SMUFL_E273_accidentalQuarterFlatNaturalArrowDown);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_1qf:
+//            this->glyphs.push_back(SMUFL_E280_accidentalQuarterToneFlatStein);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_3qf:
+//            this->glyphs.push_back(SMUFL_E281_accidentalThreeQuarterTonesFlatZimmermann);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_1qs:
+//            this->glyphs.push_back(SMUFL_E282_accidentalQuarterToneSharpStein);
+//            break;
+//        case ACCIDENTAL_EXPLICIT_3qs:
+//            this->glyphs.push_back(SMUFL_E283_accidentalThreeQuarterTonesSharpStein);
+//            break;
         default:
-            glyphNums = 0;
+            LogWarning("Accidental '%s' can not be rendered as a vector yet.", AttAccidental::AccidentalExplicitToStr(this->GetAccid()).c_str());
             break;
     }
-    return glyphNums;
+    
+    return &(this->glyphs);
 }
 
 } // namespace vrv

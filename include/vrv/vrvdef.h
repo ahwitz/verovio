@@ -302,7 +302,10 @@ enum ClefId {
     perc = CLEFSHAPE_perc << 8 | 1
 };
 
-// The next four macros were tuned using the Leipzig font.
+// Maximum number of accidental glyphs for one note
+#define MAX_ACCIDS 3
+
+// The next macros were tuned using the Leipzig font.
 
 // Width (in half-drawing units) of an accidental; used to prevent overlap on complex chords
 #define ACCID_WIDTH 4

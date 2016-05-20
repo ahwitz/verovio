@@ -205,99 +205,16 @@ void View::DrawAccid(
 
     int x = accid->GetDrawingX();
     int y = accid->GetDrawingY();
+    std::vector<int>* glyphs = accid->GetGlyphs();
 
-    // Insert glyphs into the vector in reverse order
-    std::vector<int> glyphs;
-    switch (accid->GetAccid()) {
-        case ACCIDENTAL_EXPLICIT_s:
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            break;
-        case ACCIDENTAL_EXPLICIT_f:
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            break;
-        case ACCIDENTAL_EXPLICIT_x:
-            glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
-            break;
-        case ACCIDENTAL_EXPLICIT_ss:
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            break;
-        case ACCIDENTAL_EXPLICIT_ff:
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            break;
-        case ACCIDENTAL_EXPLICIT_n:
-            glyphs.push_back(SMUFL_E261_accidentalNatural);
-            break;
-        case ACCIDENTAL_EXPLICIT_nf:
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            glyphs.push_back(SMUFL_E261_accidentalNatural);
-            break;
-        case ACCIDENTAL_EXPLICIT_ns:
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            glyphs.push_back(SMUFL_E261_accidentalNatural);
-            break;
-        case ACCIDENTAL_EXPLICIT_xs:
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
-            break;
-        case ACCIDENTAL_EXPLICIT_tf:
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            glyphs.push_back(SMUFL_E260_accidentalFlat);
-            break;
-        case ACCIDENTAL_EXPLICIT_ts:
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            glyphs.push_back(SMUFL_E262_accidentalSharp);
-            break;
-//        case ACCIDENTAL_EXPLICIT_sx:
-//            glyphs.push_back(SMUFL_E262_accidentalSharp);
-//            glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
-//            break;
-//        case ACCIDENTAL_EXPLICIT_su:
-//            symc = SMUFL_E274_accidentalThreeQuartersSharpArrowUp;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_sd:
-//            symc = SMUFL_E275_accidentalQuarterSharpArrowDown;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_fu:
-//            symc = SMUFL_E270_accidentalQuarterFlatArrowUp;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_fd:
-//            symc = SMUFL_E271_accidentalThreeQuartersFlatArrowDown;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_nu:
-//            symc = SMUFL_E272_accidentalQuarterSharpNaturalArrowUp;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_nd:
-//            symc = SMUFL_E273_accidentalQuarterFlatNaturalArrowDown;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_1qf:
-//            symc = SMUFL_E280_accidentalQuarterToneFlatStein;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_3qf:
-//            symc = SMUFL_E281_accidentalThreeQuarterTonesFlatZimmermann;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_1qs:
-//            symc = SMUFL_E282_accidentalQuarterToneSharpStein;
-//            break;
-//        case ACCIDENTAL_EXPLICIT_3qs:
-//            symc = SMUFL_E283_accidentalThreeQuarterTonesSharpStein;
-//            break;
-        default:
-            LogWarning("Accidental '%s' is not supported yet.", accid->AccidentalExplicitToStr(accid->GetAccid()).c_str());
-            break;
-    }
-
-    if (glyphs.size() > 0)
+    if (glyphs->size() > 0)
     {
-        for (int gIdx = 0; gIdx < glyphs.size(); gIdx++)
+        for (int gIdx = 0; gIdx < glyphs->size(); gIdx++)
         {
             int multiGlyphOffset = gIdx * m_doc->GetDrawingDoubleUnit(staff->m_drawingStaffSize);
-            if (glyphs.at(gIdx) == SMUFL_E263_accidentalDoubleSharp)
+            if (glyphs->at(gIdx) == SMUFL_E263_accidentalDoubleSharp)
                 multiGlyphOffset += 2 * m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize); // Two stem widths is a constant that happens to look good?
-            DrawSmuflCode(dc, x - multiGlyphOffset, y, glyphs.at(gIdx), staff->m_drawingStaffSize, accid->m_drawingCueSize);
+            DrawSmuflCode(dc, x - multiGlyphOffset, y, glyphs->at(gIdx), staff->m_drawingStaffSize, accid->m_drawingCueSize);
         }
     }
     else

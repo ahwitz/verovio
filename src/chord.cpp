@@ -201,10 +201,10 @@ void Chord::ResetAccidSpace(int fullUnit)
      * Prepare for the situation where every accidental conflicts horizontally:
      *    -Assume each accidental to be 2 drawing units wide, drawn to 1/2-unit detail (ACCID_WIDTH should be
      * represented in half-units)
-     *    -Prepare each line to account for triple-accidentals for each note, with one extra triple so we can guarantee the grid has enough space
+     *    -Prepare each line to account for MAX_ACCID accidentals for each note, with one extra triple so we can guarantee the grid has enough space
      *    -Set m_accidSpaceLeft to be used for asserts during drawing
      */
-    int accidLineLength = (int)m_accidList.size() * (ACCID_WIDTH * 3);
+    int accidLineLength = (int)m_accidList.size() * (ACCID_WIDTH * MAX_ACCIDS);
 
     /*
      * Each accidental's Y position will be its vertical center; set the grid extremes to account for that
