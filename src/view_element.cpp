@@ -206,38 +206,55 @@ void View::DrawAccid(
     int x = accid->GetDrawingX();
     int y = accid->GetDrawingY();
 
-    int symc = SMUFL_E261_accidentalNatural;
+    // Insert glyphs into the vector in reverse order
+    std::vector<int> glyphs;
     switch (accid->GetAccid()) {
         case ACCIDENTAL_EXPLICIT_s:
-            symc = SMUFL_E262_accidentalSharp;
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
             break;
         case ACCIDENTAL_EXPLICIT_f:
-            symc = SMUFL_E260_accidentalFlat;
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
             break;
         case ACCIDENTAL_EXPLICIT_x:
-            symc = SMUFL_E263_accidentalDoubleSharp;
+            glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
             break;
         case ACCIDENTAL_EXPLICIT_ss:
-            symc = SMUFL_E269_accidentalSharpSharp;
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
             break;
         case ACCIDENTAL_EXPLICIT_ff:
-            symc = SMUFL_E264_accidentalDoubleFlat;
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
             break;
         case ACCIDENTAL_EXPLICIT_n:
-            symc = SMUFL_E261_accidentalNatural;
+            glyphs.push_back(SMUFL_E261_accidentalNatural);
             break;
         case ACCIDENTAL_EXPLICIT_nf:
-            symc = SMUFL_E267_accidentalNaturalFlat;
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
+            glyphs.push_back(SMUFL_E261_accidentalNatural);
             break;
         case ACCIDENTAL_EXPLICIT_ns:
-            symc = SMUFL_E268_accidentalNaturalSharp;
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
+            glyphs.push_back(SMUFL_E261_accidentalNatural);
             break;
         case ACCIDENTAL_EXPLICIT_xs:
-            symc = SMUFL_E265_accidentalTripleSharp;
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
+            glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
             break;
         case ACCIDENTAL_EXPLICIT_tf:
-            symc = SMUFL_E266_accidentalTripleFlat;
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
+            glyphs.push_back(SMUFL_E260_accidentalFlat);
             break;
+        case ACCIDENTAL_EXPLICIT_ts:
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
+            glyphs.push_back(SMUFL_E262_accidentalSharp);
+            break;
+//        case ACCIDENTAL_EXPLICIT_sx:
+//            glyphs.push_back(SMUFL_E262_accidentalSharp);
+//            glyphs.push_back(SMUFL_E263_accidentalDoubleSharp);
+//            break;
 //        case ACCIDENTAL_EXPLICIT_su:
 //            symc = SMUFL_E274_accidentalThreeQuartersSharpArrowUp;
 //            break;
@@ -268,18 +285,25 @@ void View::DrawAccid(
 //        case ACCIDENTAL_EXPLICIT_3qs:
 //            symc = SMUFL_E283_accidentalThreeQuarterTonesSharpStein;
 //            break;
-        /*
-        case ACCIDENTAL_EXPLICIT_sx:
-             break;
-        case ACCIDENTAL_EXPLICIT_ts:
-            break;
-         */
         default:
             LogWarning("Accidental '%s' is not supported yet.", accid->AccidentalExplicitToStr(accid->GetAccid()).c_str());
             break;
     }
 
-    DrawSmuflCode(dc, x, y, symc, staff->m_drawingStaffSize, accid->m_drawingCueSize);
+    if (glyphs.size() > 0)
+    {
+        for (int gIdx = 0; gIdx < glyphs.size(); gIdx++)
+        {
+            int multiGlyphOffset = gIdx * m_doc->GetDrawingDoubleUnit(staff->m_drawingStaffSize);
+            if (glyphs.at(gIdx) == SMUFL_E263_accidentalDoubleSharp)
+                multiGlyphOffset += 2 * m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize); // Two stem widths is a constant that happens to look good?
+            DrawSmuflCode(dc, x - multiGlyphOffset, y, glyphs.at(gIdx), staff->m_drawingStaffSize, accid->m_drawingCueSize);
+        }
+    }
+    else
+    {
+        element->SetEmptyBB();
+    }
 
     dc->EndGraphic(element, this);
 }
@@ -2118,7 +2142,7 @@ bool View::CalculateAccidX(Staff *staff, Accid *accid, Chord *chord, bool adjust
         accid->SetDrawingX(accid->GetDrawingX() - xShift);
 
         // mark the spaces as taken (true in accidSpace)
-        for (int xIdx = currentX; xIdx > currentX - ACCID_WIDTH; xIdx--) {
+        for (int xIdx = currentX; xIdx > currentX - accid->GetWidth(); xIdx--) {
             for (int yIdx = accidTop; yIdx < accidBot + 1; yIdx++) {
                 accidSpace->at(yIdx).at(xIdx) = true;
             }
@@ -2127,7 +2151,7 @@ bool View::CalculateAccidX(Staff *staff, Accid *accid, Chord *chord, bool adjust
     // Otherwise, just mark its vertical position so we can see if there are any vertical conflicts
     else {
         // x from 0 to 4, base position
-        for (int xIdx = 0; xIdx < ACCID_WIDTH; xIdx++) {
+        for (int xIdx = 0; xIdx < accid->GetWidth(); xIdx++) {
             for (int yIdx = accidTop; yIdx < accidBot + 1; yIdx++) {
                 accidSpace->at(yIdx).at(xIdx) = true;
             }
