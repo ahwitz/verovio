@@ -208,18 +208,31 @@ void View::DrawAccid(
 
     int symc = SMUFL_E261_accidentalNatural;
     switch (accid->GetAccid()) {
-        case ACCIDENTAL_EXPLICIT_n: symc = SMUFL_E261_accidentalNatural; break;
-        case ACCIDENTAL_EXPLICIT_ss: symc = SMUFL_E263_accidentalDoubleSharp; break;
-        case ACCIDENTAL_EXPLICIT_s: symc = SMUFL_E262_accidentalSharp; break;
-        case ACCIDENTAL_EXPLICIT_ff: symc = SMUFL_E264_accidentalDoubleFlat;
-        case ACCIDENTAL_EXPLICIT_f: symc = SMUFL_E260_accidentalFlat; break;
-        case ACCIDENTAL_EXPLICIT_su:
+        case ACCIDENTAL_EXPLICIT_n:
+            symc = SMUFL_E261_accidentalNatural;
+            break;
+        case ACCIDENTAL_EXPLICIT_s:
+            symc = SMUFL_E262_accidentalSharp;
+            break;
+        case ACCIDENTAL_EXPLICIT_f:
+            symc = SMUFL_E260_accidentalFlat;
+            break;
+            
+        case ACCIDENTAL_EXPLICIT_x:
+            symc = SMUFL_E263_accidentalDoubleSharp;
+            break;
+        case ACCIDENTAL_EXPLICIT_ff:
+            symc = SMUFL_E264_accidentalDoubleFlat;
+            break;
+            
+        case ACCIDENTAL_EXPLICIT_ns:
             symc = SMUFL_E268_accidentalNaturalSharp;
-            break; // Not sure this is correct...
-        case ACCIDENTAL_EXPLICIT_fu:
+            break;
+        case ACCIDENTAL_EXPLICIT_nf:
             symc = SMUFL_E267_accidentalNaturalFlat;
             break; // Same
-        default: break;
+        default:
+            break;
     }
 
     DrawSmuflCode(dc, x, y, symc, staff->m_drawingStaffSize, accid->m_drawingCueSize);
