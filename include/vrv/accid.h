@@ -36,8 +36,12 @@ public:
     /** Override the method since alignment is required */
     virtual bool HasToBeAligned() const { return true; };
     
+    /** Used to help determine width of the eventually drawn graphic */
     int GetGlyphs();
     int GetWidth() { return this->GetGlyphs() * ACCID_WIDTH; }
+    
+    //
+    std::string AccidentalExplicitToStr(data_ACCIDENTAL_EXPLICIT data) { return AttAccidental::AccidentalExplicitToStr(data); }
 
     //----------//
     // Functors //

@@ -238,35 +238,44 @@ void View::DrawAccid(
         case ACCIDENTAL_EXPLICIT_tf:
             symc = SMUFL_E266_accidentalTripleFlat;
             break;
+//        case ACCIDENTAL_EXPLICIT_su:
+//            symc = SMUFL_E274_accidentalThreeQuartersSharpArrowUp;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_sd:
+//            symc = SMUFL_E275_accidentalQuarterSharpArrowDown;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_fu:
+//            symc = SMUFL_E270_accidentalQuarterFlatArrowUp;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_fd:
+//            symc = SMUFL_E271_accidentalThreeQuartersFlatArrowDown;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_nu:
+//            symc = SMUFL_E272_accidentalQuarterSharpNaturalArrowUp;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_nd:
+//            symc = SMUFL_E273_accidentalQuarterFlatNaturalArrowDown;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_1qf:
+//            symc = SMUFL_E280_accidentalQuarterToneFlatStein;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_3qf:
+//            symc = SMUFL_E281_accidentalThreeQuarterTonesFlatZimmermann;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_1qs:
+//            symc = SMUFL_E282_accidentalQuarterToneSharpStein;
+//            break;
+//        case ACCIDENTAL_EXPLICIT_3qs:
+//            symc = SMUFL_E283_accidentalThreeQuarterTonesSharpStein;
+//            break;
         /*
         case ACCIDENTAL_EXPLICIT_sx:
              break;
         case ACCIDENTAL_EXPLICIT_ts:
             break;
-        case ACCIDENTAL_EXPLICIT_su:
-            break;
-        case ACCIDENTAL_EXPLICIT_sd:
-            break;
-        case ACCIDENTAL_EXPLICIT_fu:
-            break;
-        case ACCIDENTAL_EXPLICIT_fd:
-            break;
-        case ACCIDENTAL_EXPLICIT_nu:
-            break;
-        case ACCIDENTAL_EXPLICIT_nd:
-            break;
-        case ACCIDENTAL_EXPLICIT_1qf:
-            break;
-        case ACCIDENTAL_EXPLICIT_3qf:
-            break;
-        case ACCIDENTAL_EXPLICIT_1qs:
-            break;
-        case ACCIDENTAL_EXPLICIT_3qs:
-            break;
-        **/
+         */
         default:
-            //LogWarning("Accidental '%s' is not supported yet.", accid->AccidentalExplicitToStr(accid->GetAccid()).c_str());
-            LogWarning("Attempted to render a non-supported accidental.");
+            LogWarning("Accidental '%s' is not supported yet.", accid->AccidentalExplicitToStr(accid->GetAccid()).c_str());
             break;
     }
 
