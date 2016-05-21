@@ -151,8 +151,7 @@ void View::DrawLayerElement(DeviceContext *dc, LayerElement *element, Layer *lay
 // View - LayerElement
 //----------------------------------------------------------------------------
 
-void View::DrawAccid(
-    DeviceContext *dc, LayerElement *element, Layer *layer, Staff *staff, Measure *measure, Accid *prevAccid)
+void View::DrawAccid(DeviceContext *dc, LayerElement *element, Layer *layer, Staff *staff, Measure *measure, Accid *prevAccid)
 {
     assert(dc);
     assert(element);
@@ -205,15 +204,17 @@ void View::DrawAccid(
 
     int x = accid->GetDrawingX();
     int y = accid->GetDrawingY();
-    std::vector<int>* glyphs = accid->GetGlyphs();
+    std::vector<int>* glyphs = &(accid->glyphs);
 
+    LogDebug("Printing new accid at %i", x);
     if (glyphs->size() > 0)
     {
         for (int gIdx = 0; gIdx < glyphs->size(); gIdx++)
         {
+            LogDebug("\tGlyph: %i", glyphs->at(gIdx));
             int multiGlyphOffset = gIdx * m_doc->GetDrawingDoubleUnit(staff->m_drawingStaffSize);
             if (glyphs->at(gIdx) == SMUFL_E263_accidentalDoubleSharp)
-                multiGlyphOffset += 2 * m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize); // Two stem widths is a constant that happens to look good?
+                multiGlyphOffset += 3 * m_doc->GetDrawingStemWidth(staff->m_drawingStaffSize); // A constant that happens to look good?
             DrawSmuflCode(dc, x - multiGlyphOffset, y, glyphs->at(gIdx), staff->m_drawingStaffSize, accid->m_drawingCueSize);
         }
     }
@@ -1850,7 +1851,7 @@ void View::DrawTrill(DeviceContext *dc, LayerElement *element, Staff *staff)
 
 bool View::CalculateAccidX(Staff *staff, Accid *accid, Chord *chord, bool adjustHorizontally)
 {
-    std::vector<std::vector<bool> > *accidSpace = &chord->m_accidSpace;
+    std::vector<std::vector<bool>> *accidSpace = &chord->m_accidSpace;
 
     // Declared here for avoiding unused variable warning in non debug mode
     int listBot, bottomY, accidSpaceSize;
@@ -1865,231 +1866,240 @@ bool View::CalculateAccidX(Staff *staff, Accid *accid, Chord *chord, bool adjust
     int yHeight = (int)accidSpace->size() - 1;
     int listTop = chord->m_accidSpaceTop;
     listBot = chord->m_accidSpaceBot;
+    
+    // Iterate through list of glyphs
+    bool changedX = false;
+    std::vector<int>* glyphList = &(accid->glyphs);
+    for (int gIdx = 0; gIdx < glyphList->size(); gIdx++)
+    {
+        // drawing variables for the glyph
+        int type = glyphList->at(gIdx);
+        int centerY = accid->GetDrawingY();
+        int topY = centerY + (accidHeight / 2);
+        bottomY = centerY - (accidHeight / 2);
 
-    // drawing variables for the accidental
-    int type = accid->GetAccid();
-    int centerY = accid->GetDrawingY();
-    int topY = centerY + (accidHeight / 2);
-    bottomY = centerY - (accidHeight / 2);
+        // difference between left end and right end of the glyph
+        int accidWidthDiff = ACCID_WIDTH - 1;
+        // difference between top and bottom of the glyph
+        int accidHeightDiff = ACCID_HEIGHT - 1;
+        // drawing variables for the glyph in accidSpace units
+        int accidTop = std::max(0, listTop - topY) / halfUnit;
+        int accidBot, alignmentThreshold;
+        // the left side of the accidental; gets incremented to avoid conflicts
+        int currentX = accidWidthDiff;
 
-    // difference between left end and right end of the accidental
-    int accidWidthDiff = ACCID_WIDTH - 1;
-    // difference between top and bottom of the accidental
-    int accidHeightDiff = ACCID_HEIGHT - 1;
-    // drawing variables for the accidental in accidSpace units
-    int accidTop = std::max(0, listTop - topY) / halfUnit;
-    int accidBot, alignmentThreshold;
-    // the left side of the accidental; gets incremented to avoid conflicts
-    int currentX = accidWidthDiff;
+        // another way of calculating accidBot
+        assert(((int)accidSpace->size() - 1) - ((std::max(0, bottomY - listBot)) / halfUnit) == accidTop + accidHeightDiff);
 
-    // another way of calculating accidBot
-    assert(((int)accidSpace->size() - 1) - ((std::max(0, bottomY - listBot)) / halfUnit) == accidTop + accidHeightDiff);
+        // store it for asserts
+        accidSpaceSize = (int)accidSpace->size();
+        assert(accidTop >= 0);
+        assert(accidTop < accidSpaceSize);
 
-    // store it for asserts
-    accidSpaceSize = (int)accidSpace->size();
-    assert(accidTop >= 0);
-    assert(accidTop < accidSpaceSize);
-
-    /*
-     * Make sure all four corners of the accidental are not on an already-taken spot.
-     * The top right corner of a flat can overlap something else; make sure that the bordering sections do not overlap.
-     * Move the accidental one half-unit left until it doesn't overlap.
-     */
-    if (type == ACCIDENTAL_EXPLICIT_f) {
-        alignmentThreshold = 2;
-        accidBot = accidTop + (accidHeightDiff * FLAT_BOTTOM_HEIGHT_MULTIPLIER);
-        assert(accidBot < accidSpaceSize);
-        while (currentX < xLength) {
-            if (accidSpace->at(accidTop + (ACCID_HEIGHT * FLAT_CORNER_HEIGHT_IGNORE)).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            // just in case
-            else if (currentX - accidWidthDiff + (ACCID_WIDTH * FLAT_CORNER_WIDTH_IGNORE) >= xLength) {
-                break;
-            }
-            else if (accidSpace->at(accidTop).at(
-                         currentX - accidWidthDiff + (ACCID_WIDTH * FLAT_CORNER_WIDTH_IGNORE))) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidTop).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX)) {
-                currentX += 1;
-            }
-            else {
-                break;
-            }
-        };
-    }
-    else if (type == ACCIDENTAL_EXPLICIT_n) {
-        alignmentThreshold = 1;
-        accidBot = accidTop + accidHeightDiff;
-        assert(accidBot < accidSpaceSize);
-        // Midpoint needs to be checked for non-flats as there's a chance that a natural/sharp could completely overlap
-        // a flat
-        int accidMid = accidTop + (accidBot - accidTop) / 2;
-        while (currentX < xLength) {
-            if (accidSpace->at(accidTop + (ACCID_HEIGHT * NATURAL_CORNER_HEIGHT_IGNORE))
-                    .at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            // just in case
-            else if (currentX - accidWidthDiff + (ACCID_WIDTH * NATURAL_CORNER_WIDTH_IGNORE) >= xLength) {
-                break;
-            }
-            else if (accidSpace->at(accidTop).at(
-                         currentX - accidWidthDiff + (ACCID_WIDTH * NATURAL_CORNER_WIDTH_IGNORE))) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidMid).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidTop).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidMid).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX)) {
-                currentX += 1;
-            }
-            else {
-                break;
-            }
-        };
-    }
-    else if (type == ACCIDENTAL_EXPLICIT_s) {
-        accidBot = accidTop + accidHeightDiff;
-        alignmentThreshold = 1;
-        // Midpoint needs to be checked for non-flats as there's a chance that a natural/sharp could completely overlap
-        // a flat
-        int accidMid = accidTop + (accidBot - accidTop) / 2;
-        while (currentX < xLength) {
-            if (accidSpace->at(accidTop).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidMid).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidTop).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidMid).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX)) {
-                currentX += 1;
-            }
-            else {
-                break;
-            }
-        };
-    }
-    else {
-        accidBot = accidTop + accidHeightDiff;
-        alignmentThreshold = 1;
-        assert(accidBot < accidSpaceSize);
-        // Midpoint needs to be checked for non-flats as there's a chance that a natural/sharp could completely overlap
-        // a flat
-        int accidMid = accidTop + (accidBot - accidTop) / 2;
-        assert(accidMid < accidSpaceSize);
-        while (currentX < xLength) {
-            if (accidSpace->at(accidTop).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidMid).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidTop).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidMid).at(currentX)) {
-                currentX += 1;
-            }
-            else if (accidSpace->at(accidBot).at(currentX)) {
-                currentX += 1;
-            }
-            else {
-                break;
-            }
-        };
-    }
-
-    // If the accidental is lined up with the one above it, move it left by a halfunit to avoid visual confusion
-    // This doesn't need to be done with accidentals that are as far left or up as possible
-    if ((currentX < xLength - 1) && (accidTop > 1)) {
-        int yComp = accidTop - alignmentThreshold;
-        assert(yComp < accidSpaceSize);
-        assert(yComp >= 0);
-        if ((accidSpace->at(yComp).at(currentX + 1) == false) && (accidSpace->at(yComp).at(currentX) == true)) {
-            currentX += 1;
+        /*
+         * Make sure all four corners of the accidental are not on an already-taken spot.
+         * The top right corner of a flat can overlap something else; make sure that the bordering sections do not overlap.
+         * Move the accidental one half-unit left until it doesn't overlap.
+         */
+        if (type == ACCIDENTAL_EXPLICIT_f) {
+            alignmentThreshold = 2;
+            accidBot = accidTop + (accidHeightDiff * FLAT_BOTTOM_HEIGHT_MULTIPLIER);
+            assert(accidBot < accidSpaceSize);
+            while (currentX < xLength) {
+                if (accidSpace->at(accidTop + (ACCID_HEIGHT * FLAT_CORNER_HEIGHT_IGNORE)).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                // just in case
+                else if (currentX - accidWidthDiff + (ACCID_WIDTH * FLAT_CORNER_WIDTH_IGNORE) >= xLength) {
+                    break;
+                }
+                else if (accidSpace->at(accidTop).at(
+                             currentX - accidWidthDiff + (ACCID_WIDTH * FLAT_CORNER_WIDTH_IGNORE))) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidTop).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX)) {
+                    currentX += 1;
+                }
+                else {
+                    break;
+                }
+            };
         }
-    }
-
-    // If the accidental is lined up with the one below it, move it left by a halfunit to avoid visual confusion
-    // This doesn't need to be done with accidentals that are as far left or down as possible
-    if ((currentX < xLength - 1) && (accidBot < (yHeight - 1)) && accidBot > 1) {
-        int yComp = accidBot;
-        assert(yComp < accidSpaceSize);
-        assert(yComp >= 0);
-        if ((accidSpace->at(yComp).at(currentX + 1) == false) && (accidSpace->at(yComp).at(currentX) == true)) {
-            currentX += 1;
+        else if (type == ACCIDENTAL_EXPLICIT_n) {
+            alignmentThreshold = 1;
+            accidBot = accidTop + accidHeightDiff;
+            assert(accidBot < accidSpaceSize);
+            // Midpoint needs to be checked for non-flats as there's a chance that a natural/sharp could completely overlap
+            // a flat
+            int accidMid = accidTop + (accidBot - accidTop) / 2;
+            while (currentX < xLength) {
+                if (accidSpace->at(accidTop + (ACCID_HEIGHT * NATURAL_CORNER_HEIGHT_IGNORE))
+                        .at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                // just in case
+                else if (currentX - accidWidthDiff + (ACCID_WIDTH * NATURAL_CORNER_WIDTH_IGNORE) >= xLength) {
+                    break;
+                }
+                else if (accidSpace->at(accidTop).at(
+                             currentX - accidWidthDiff + (ACCID_WIDTH * NATURAL_CORNER_WIDTH_IGNORE))) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidMid).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidTop).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidMid).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX)) {
+                    currentX += 1;
+                }
+                else {
+                    break;
+                }
+            };
         }
-    }
+        else if (type == ACCIDENTAL_EXPLICIT_s) {
+            accidBot = accidTop + accidHeightDiff;
+            alignmentThreshold = 1;
+            // Midpoint needs to be checked for non-flats as there's a chance that a natural/sharp could completely overlap
+            // a flat
+            int accidMid = accidTop + (accidBot - accidTop) / 2;
+            while (currentX < xLength) {
+                if (accidSpace->at(accidTop).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidMid).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidTop).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidMid).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX)) {
+                    currentX += 1;
+                }
+                else {
+                    break;
+                }
+            };
+        }
+        else {
+            accidBot = accidTop + accidHeightDiff;
+            alignmentThreshold = 1;
+            assert(accidBot < accidSpaceSize);
+            // Midpoint needs to be checked for non-flats as there's a chance that a natural/sharp could completely overlap
+            // a flat
+            int accidMid = accidTop + (accidBot - accidTop) / 2;
+            assert(accidMid < accidSpaceSize);
+            while (currentX < xLength) {
+                if (accidSpace->at(accidTop).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidMid).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX - accidWidthDiff)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidTop).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidMid).at(currentX)) {
+                    currentX += 1;
+                }
+                else if (accidSpace->at(accidBot).at(currentX)) {
+                    currentX += 1;
+                }
+                else {
+                    break;
+                }
+            };
+        }
 
-    // Just to make sure.
-    assert(currentX <= xLength);
-
-    // If we need to move the accidental horizontally, move it by currentX half-units.
-    if (adjustHorizontally) {
-        int xShift = currentX * halfUnit;
-        accid->SetDrawingX(accid->GetDrawingX() - xShift);
-
-        // mark the spaces as taken (true in accidSpace)
-        for (int xIdx = currentX; xIdx > currentX - accid->GetWidth(); xIdx--) {
-            for (int yIdx = accidTop; yIdx < accidBot + 1; yIdx++) {
-                accidSpace->at(yIdx).at(xIdx) = true;
+        // If the accidental is lined up with the one above it, move it left by a halfunit to avoid visual confusion
+        // This doesn't need to be done with accidentals that are as far left or up as possible
+        if ((currentX < xLength - 1) && (accidTop > 1)) {
+            int yComp = accidTop - alignmentThreshold;
+            assert(yComp < accidSpaceSize);
+            assert(yComp >= 0);
+            if ((accidSpace->at(yComp).at(currentX + 1) == false) && (accidSpace->at(yComp).at(currentX) == true)) {
+                currentX += 1;
             }
         }
-    }
-    // Otherwise, just mark its vertical position so we can see if there are any vertical conflicts
-    else {
-        // x from 0 to 4, base position
-        for (int xIdx = 0; xIdx < accid->GetWidth(); xIdx++) {
-            for (int yIdx = accidTop; yIdx < accidBot + 1; yIdx++) {
-                accidSpace->at(yIdx).at(xIdx) = true;
+
+        // If the accidental is lined up with the one below it, move it left by a halfunit to avoid visual confusion
+        // This doesn't need to be done with accidentals that are as far left or down as possible
+        if ((currentX < xLength - 1) && (accidBot < (yHeight - 1)) && accidBot > 1) {
+            int yComp = accidBot;
+            assert(yComp < accidSpaceSize);
+            assert(yComp >= 0);
+            if ((accidSpace->at(yComp).at(currentX + 1) == false) && (accidSpace->at(yComp).at(currentX) == true)) {
+                currentX += 1;
             }
         }
+
+        // Just to make sure.
+        assert(currentX <= xLength);
+
+        // If we need to move the accidental horizontally, move it by currentX half-units.
+        if (adjustHorizontally) {
+            int xShift = currentX * halfUnit;
+            accid->SetDrawingX(accid->GetDrawingX() - xShift);
+
+            // mark the spaces as taken (true in accidSpace)
+            for (int xIdx = currentX; xIdx > currentX - ACCID_WIDTH; xIdx--) {
+                for (int yIdx = accidTop; yIdx < accidBot + 1; yIdx++) {
+                    accidSpace->at(yIdx).at(xIdx) = true;
+                }
+            }
+        }
+        // Otherwise, just mark its vertical position so we can see if there are any vertical conflicts
+        else {
+            // x from 0 to 4, base position
+            for (int xIdx = 0; xIdx < ACCID_WIDTH; xIdx++) {
+                for (int yIdx = accidTop; yIdx < accidBot + 1; yIdx++) {
+                    accidSpace->at(yIdx).at(xIdx) = true;
+                }
+            }
+        }
+        
+        if (currentX - accidWidthDiff == 0) changedX = true;
+        
+        // For debugging; leaving this in temporarily
+        //    for (int vIdx = 0; vIdx < accidSpace->size(); vIdx++)
+        //    {
+        //        std::cout << "|";
+        //        std::vector<bool> thisRow = accidSpace->at(vIdx);
+        //        for (int hIdx = (int)thisRow.size() - 1; hIdx >= 0; hIdx --)
+        //        {
+        //            std::cout << thisRow.at(hIdx) << "|";
+        //        }
+        //        std::cout << std::endl;
+        //    }
+        //    std::cout << std::endl;
+
     }
 
-    // For debugging; leaving this in temporarily
-    //    for (int vIdx = 0; vIdx < accidSpace->size(); vIdx++)
-    //    {
-    //        std::cout << "|";
-    //        std::vector<bool> thisRow = accidSpace->at(vIdx);
-    //        for (int hIdx = (int)thisRow.size() - 1; hIdx >= 0; hIdx --)
-    //        {
-    //            std::cout << thisRow.at(hIdx) << "|";
-    //        }
-    //        std::cout << std::endl;
-    //    }
-    //    std::cout << std::endl;
-
-    // Regardless of whether or not we moved it, return true if there was a conflict and currentX would have been moved
-    return (currentX - accidWidthDiff == 0);
+    // Regardless of whether or not we moved anything, return true if there was a conflict and currentX would have been moved for something
+    return changedX;
 }
 
 int View::GetSylY(Syl *syl, Staff *staff)

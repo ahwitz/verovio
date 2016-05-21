@@ -36,11 +36,8 @@ public:
     /** Override the method since alignment is required */
     virtual bool HasToBeAligned() const { return true; };
     
-    /** Used to help determine width of the eventually drawn graphic */
-    std::vector<int>* GetGlyphs();
-    int GetWidth() { return (int)this->glyphs.size() * ACCID_WIDTH; }
-    
-    //
+    // Overrides
+    void SetAccid(data_ACCIDENTAL_EXPLICIT accid);
     std::string AccidentalExplicitToStr(data_ACCIDENTAL_EXPLICIT data) { return AttAccidental::AccidentalExplicitToStr(data); }
 
     //----------//
@@ -60,6 +57,8 @@ public:
      * See Note::PreparePointersByLayer and View::DrawAccid
      */
     bool m_drawingCueSize;
+    
+    // Stores the glyphs that comprise the accidental
     std::vector<int> glyphs;
 
 private:

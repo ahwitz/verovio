@@ -66,12 +66,13 @@ int Accid::PreparePointersByLayer(ArrayPtrVoid *params)
 
     return FUNCTOR_CONTINUE;
 }
-    
-std::vector<int>* Accid::GetGlyphs()
+
+void Accid::SetAccid(data_ACCIDENTAL_EXPLICIT accid)
 {
+    AttAccidental::SetAccid(accid);
+ 
     // Insert glyphs into the vector in reverse order
     this->glyphs.clear();
-    
     switch (this->GetAccid()) {
         case ACCIDENTAL_EXPLICIT_s:
             this->glyphs.push_back(SMUFL_E262_accidentalSharp);
@@ -153,8 +154,6 @@ std::vector<int>* Accid::GetGlyphs()
             LogWarning("Accidental '%s' can not be rendered as a vector yet.", AttAccidental::AccidentalExplicitToStr(this->GetAccid()).c_str());
             break;
     }
-    
-    return &(this->glyphs);
 }
 
 } // namespace vrv
