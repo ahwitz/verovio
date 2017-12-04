@@ -165,7 +165,13 @@ public:
      */
     double GetAlignmentDuration(Mensur *mensur = NULL, MeterSig *meterSig = NULL, bool notGraceOnly = true,
         data_NOTATIONTYPE notationType = NOTATIONTYPE_cmn);
-
+    
+    /**
+     * Used as a means of converting a letter note to pitch name
+     * (Saved here because it can be used for pname or ploc attributes)
+     */
+    data_PITCHNAME ConvertStepToPitchName(std::string value);
+    
     //----------//
     // Functors //
     //----------//
