@@ -251,7 +251,8 @@ public:
      */
     ///@{
     bool Drag(std::string elementId, int x, int y);
-    bool Insert(std::string elementType, std::string startId, std::string endId);
+    bool InsertSlur(std::string startId, std::string endId);
+    bool InsertNote(int octave, std::string pname, std::string parentID);
     bool Set(std::string elementId, std::string attrType, std::string attrValue);
     ///@}
 
@@ -266,7 +267,8 @@ protected:
      */
     ///@{
     bool ParseDragAction(jsonxx::Object param, std::string *elementId, int *x, int *y);
-    bool ParseInsertAction(jsonxx::Object param, std::string *elementType, std::string *startid, std::string *endid);
+    bool ParseInsertSlurAction(jsonxx::Object param, std::string *startid, std::string *endid);
+    bool ParseInsertNoteAction(jsonxx::Object param, int *octave, std::string *pname, std::string *parentID);
     bool ParseSetAction(jsonxx::Object param, std::string *elementId, std::string *attrType, std::string *attrValue);
 ///@}
 #endif

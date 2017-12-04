@@ -1397,7 +1397,7 @@ void MusicXmlInput::ReadMusicXmlNote(pugi::xml_node node, Measure *measure, std:
             element = mRest;
             // FIXME MEI 4.0.0
             // if (cue) mRest->SetSize(SIZE_cue);
-            if (!stepStr.empty()) mRest->SetPloc(ConvertStepToPitchName(stepStr));
+            if (!stepStr.empty()) mRest->SetPloc(mRest->ConvertStepToPitchName(stepStr));
             if (!octaveStr.empty()) mRest->SetOloc(atoi(octaveStr.c_str()));
             AddLayerElement(layer, mRest);
         }
@@ -1408,7 +1408,7 @@ void MusicXmlInput::ReadMusicXmlNote(pugi::xml_node node, Measure *measure, std:
             if (dots > 0) rest->SetDots(dots);
             // FIXME MEI 4.0.0
             // if (cue) rest->SetSize(SIZE_cue);
-            if (!stepStr.empty()) rest->SetPloc(ConvertStepToPitchName(stepStr));
+            if (!stepStr.empty()) rest->SetPloc(rest->ConvertStepToPitchName(stepStr));
             if (!octaveStr.empty()) rest->SetOloc(atoi(octaveStr.c_str()));
             AddLayerElement(layer, rest);
         }
@@ -1447,7 +1447,7 @@ void MusicXmlInput::ReadMusicXmlNote(pugi::xml_node node, Measure *measure, std:
         pugi::xpath_node pitch = node.select_single_node("pitch");
         if (pitch) {
             std::string stepStr = GetContentOfChild(pitch.node(), "step");
-            if (!stepStr.empty()) note->SetPname(ConvertStepToPitchName(stepStr));
+            if (!stepStr.empty()) note->SetPname(note->ConvertStepToPitchName(stepStr));
             std::string octaveStr = GetContentOfChild(pitch.node(), "octave");
             if (!octaveStr.empty()) {
                 if (m_octDis[staff->GetN()] != 0) {
@@ -1979,28 +1979,6 @@ data_DURATION MusicXmlInput::ConvertTypeToDur(std::string value)
     else {
         LogWarning("Unsupported type '%s'", value.c_str());
         return DURATION_NONE;
-    }
-}
-
-data_PITCHNAME MusicXmlInput::ConvertStepToPitchName(std::string value)
-{
-    if (value == "C")
-        return PITCHNAME_c;
-    else if (value == "D")
-        return PITCHNAME_d;
-    else if (value == "E")
-        return PITCHNAME_e;
-    else if (value == "F")
-        return PITCHNAME_f;
-    else if (value == "G")
-        return PITCHNAME_g;
-    else if (value == "A")
-        return PITCHNAME_a;
-    else if (value == "B")
-        return PITCHNAME_b;
-    else {
-        LogWarning("Unsupported pitch name '%s'", value.c_str());
-        return PITCHNAME_NONE;
     }
 }
 

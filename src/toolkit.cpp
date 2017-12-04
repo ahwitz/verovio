@@ -866,26 +866,44 @@ bool Toolkit::Edit(const std::string &json_editorAction)
     }
 
     if (json.has<jsonxx::String>("action") && json.has<jsonxx::Object>("param")) {
+        jsonxx::Object param = json.get<jsonxx::Object>("param");
+        
         if (json.get<jsonxx::String>("action") == "drag") {
             std::string elementId;
             int x, y;
-            if (this->ParseDragAction(json.get<jsonxx::Object>("param"), &elementId, &x, &y)) {
+            if (this->ParseDragAction(param, &elementId, &x, &y)) {
                 return this->Drag(elementId, x, y);
             }
         }
         else if (json.get<jsonxx::String>("action") == "insert") {
             LogMessage("insert...");
-            std::string elementType, startid, endid;
-            if (this->ParseInsertAction(json.get<jsonxx::Object>("param"), &elementType, &startid, &endid)) {
-                return this->Insert(elementType, startid, endid);
+            
+            if (param.has<jsonxx::String>("elementType")) {
+                std::string elementType = param.get<jsonxx::String>("elementType");
+                
+                if (elementType == "slur") {
+                    std::string startid, endid;
+                    if (this->ParseInsertSlurAction(param, &startid, &endid)) {
+                        return this->InsertSlur(startid, endid);
+                    }
+                }
+                else if (elementType == "note") {
+                    int octave;
+                    std::string pname, parentID;
+                    if (this->ParseInsertNoteAction(param, &octave, &pname, &parentID)) {
+                        return this->InsertNote(octave, pname, parentID);
+                    }
+                }
+                
+                LogMessage("Insert with unsupported elementType or incorrect params: %s", elementType.c_str());
             }
             else {
-                LogMessage("Insert!!!! %s %s %s", elementType.c_str(), startid.c_str(), endid.c_str());
+                LogMessage("Insert without elementType!");
             }
         }
         else if (json.get<jsonxx::String>("action") == "set") {
             std::string elementId, attrType, attrValue;
-            if (this->ParseSetAction(json.get<jsonxx::Object>("param"), &elementId, &attrType, &attrValue)) {
+            if (this->ParseSetAction(param, &elementId, &attrType, &attrValue)) {
                 return this->Set(elementId, attrType, attrValue);
             }
         }
@@ -1252,9 +1270,8 @@ bool Toolkit::Drag(std::string elementId, int x, int y)
     return false;
 }
 
-bool Toolkit::Insert(std::string elementType, std::string startid, std::string endid)
+bool Toolkit::InsertSlur(std::string startid, std::string endid)
 {
-    LogMessage("Insert!");
     if (!m_doc.GetDrawingPage()) return false;
     Object *start = m_doc.GetDrawingPage()->FindChildByUuid(startid);
     Object *end = m_doc.GetDrawingPage()->FindChildByUuid(endid);
@@ -1275,15 +1292,40 @@ bool Toolkit::Insert(std::string elementType, std::string startid, std::string e
 
     Measure *measure = dynamic_cast<Measure *>(start->GetFirstParent(MEASURE));
     assert(measure);
-    if (elementType == "slur") {
-        Slur *slur = new Slur();
-        slur->SetStartid(startid);
-        slur->SetEndid(endid);
-        measure->AddChild(slur);
-        m_doc.PrepareDrawing();
-        return true;
+    
+    Slur *slur = new Slur();
+    slur->SetStartid(startid);
+    slur->SetEndid(endid);
+    measure->AddChild(slur);
+    m_doc.PrepareDrawing();
+    return true;
+}
+
+bool Toolkit::InsertNote(int octave, std::string pname, std::string parentID)
+{
+    if (!m_doc.GetDrawingPage()) return false;
+    
+    // Check if parent exists
+    Object *parent = m_doc.GetDrawingPage()->FindChildByUuid(parentID);
+    if (!parent) {
+        LogMessage("Parent element with id '%s' could not be found", parentID.c_str());
+        return false;
     }
-    return false;
+
+    // Check if it is supported
+    Chord *chord = dynamic_cast<Chord *>(parent);
+    if (!chord) {
+        LogMessage("Element '%s' is not supported as parent of inserted note", parentID.c_str());
+        return false;
+    }
+    
+    Note *note = new Note();
+    note->SetPname(note->ConvertStepToPitchName(pname));
+    note->SetOct(octave);
+    
+    chord->AddChild(note);
+    m_doc.PrepareDrawing();
+    return true;
 }
 
 bool Toolkit::Set(std::string elementId, std::string attrType, std::string attrValue)
@@ -1317,20 +1359,27 @@ bool Toolkit::ParseDragAction(jsonxx::Object param, std::string *elementId, int 
     return true;
 }
 
-bool Toolkit::ParseInsertAction(
-    jsonxx::Object param, std::string *elementType, std::string *startid, std::string *endid)
+bool Toolkit::ParseInsertSlurAction(jsonxx::Object param, std::string *startid, std::string *endid)
 {
-    if (!param.has<jsonxx::String>("elementType")) return false;
-    (*elementType) = param.get<jsonxx::String>("elementType");
     if (!param.has<jsonxx::String>("startid")) return false;
     (*startid) = param.get<jsonxx::String>("startid");
     if (!param.has<jsonxx::String>("endid")) return false;
     (*endid) = param.get<jsonxx::String>("endid");
     return true;
 }
-
-bool Toolkit::ParseSetAction(
-    jsonxx::Object param, std::string *elementId, std::string *attrType, std::string *attrValue)
+    
+bool Toolkit::ParseInsertNoteAction(jsonxx::Object param, int *octave, std::string *pname, std::string *parentID)
+{
+    if (!param.has<jsonxx::Number>("octave")) return false;
+    (*octave) = param.get<jsonxx::Number>("octave");
+    if (!param.has<jsonxx::String>("pname")) return false;
+    (*pname) = param.get<jsonxx::String>("pname");
+    if (!param.has<jsonxx::String>("parentID")) return false;
+    (*parentID) = param.get<jsonxx::String>("parentID");
+    return true;
+}
+    
+bool Toolkit::ParseSetAction(jsonxx::Object param, std::string *elementId, std::string *attrType, std::string *attrValue)
 {
     if (!param.has<jsonxx::String>("elementId")) return false;
     (*elementId) = param.get<jsonxx::String>("elementId");

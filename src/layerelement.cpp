@@ -502,6 +502,29 @@ double LayerElement::GetAlignmentDuration(
         return 0.0;
     }
 }
+    
+    
+data_PITCHNAME LayerElement::ConvertStepToPitchName(std::string value)
+{
+    if (value == "C")
+        return PITCHNAME_c;
+    else if (value == "D")
+        return PITCHNAME_d;
+    else if (value == "E")
+        return PITCHNAME_e;
+    else if (value == "F")
+        return PITCHNAME_f;
+    else if (value == "G")
+        return PITCHNAME_g;
+    else if (value == "A")
+        return PITCHNAME_a;
+    else if (value == "B")
+        return PITCHNAME_b;
+    else {
+        LogWarning("Unsupported pitch name '%s'", value.c_str());
+        return PITCHNAME_NONE;
+    }
+}
 
 //----------------------------------------------------------------------------
 // LayerElement functors methods
