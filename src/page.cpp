@@ -93,22 +93,30 @@ void Page::LayOutTranscription(bool force)
     // Doc::SetDrawingPage should have been called before
     // Make sure we have the correct page
     assert(this == doc->GetDrawingPage());
+    
+    LogMessage("bone");
 
     // Reset the horizontal alignment
     Functor resetHorizontalAlignment(&Object::ResetHorizontalAlignment);
     this->Process(&resetHorizontalAlignment, NULL);
+    LogMessage("btwo");
 
     // Reset the vertical alignment
     Functor resetVerticalAlignment(&Object::ResetVerticalAlignment);
     this->Process(&resetVerticalAlignment, NULL);
+    LogMessage("bthree");
 
     // Align the content of the page using measure aligners
     // After this:
     // - each LayerElement object will have its Alignment pointer initialized
     Functor alignHorizontally(&Object::AlignHorizontally);
+    LogMessage("bfour1");
     Functor alignHorizontallyEnd(&Object::AlignHorizontallyEnd);
+    LogMessage("bfour2");
     AlignHorizontallyParams alignHorizontallyParams(&alignHorizontally);
+    LogMessage("bfour3");
     this->Process(&alignHorizontally, &alignHorizontallyParams, &alignHorizontallyEnd);
+    LogMessage("bfour");
 
     // Align the content of the page using system aligners
     // After this:
@@ -142,6 +150,7 @@ void Page::LayOutTranscription(bool force)
     // Do not do the layout in this view - otherwise we will loop...
     view.SetPage(this->GetIdx(), false);
     view.DrawCurrentPage(&bBoxDC, false);
+    LogMessage("bten");
 
     Functor adjustXRelForTranscription(&Object::AdjustXRelForTranscription);
     this->Process(&adjustXRelForTranscription, NULL);

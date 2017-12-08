@@ -38,11 +38,14 @@ my $FLAGS = "-O3";
 $FLAGS .= " -DNDEBUG";
 $FLAGS .= " --memory-init-file 0";
 $FLAGS .= " -std=c++11";
+$FLAGS .= " -Werror";
 $FLAGS .= " -s ASM_JS=1";
 $FLAGS .= " -s OUTLINING_LIMIT=10000";
 $FLAGS .= " -s ALLOW_MEMORY_GROWTH=1";
 $FLAGS .= " -s TOTAL_MEMORY=192*1024*1024";
 $FLAGS .= " -s TOTAL_STACK=96*1024*1024";
+$FLAGS .= " -s ASSERTIONS=2";
+$FLAGS .= " -s SAFE_HEAP=1";
 
 my ($FLAGS_NAME, $VERSION, $CHATTY);
 

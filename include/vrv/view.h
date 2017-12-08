@@ -152,6 +152,15 @@ public:
     ///@{
     int CalculatePitchCode(Layer *layer, int y_n, int x_pos, int *octave);
     ///@}
+    
+    
+    /**
+     * @name Methods for redrawing specific elements
+     * Defined in the files that each original method is written in
+     */
+    ///@{
+    void RedrawLayerElement(DeviceContext *dc, LayerElement *element, Layer *layer, Staff *staff, Measure *measure);
+    ///@}
 
 protected:
     /**

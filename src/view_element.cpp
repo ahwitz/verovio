@@ -171,6 +171,13 @@ void View::DrawLayerElement(DeviceContext *dc, LayerElement *element, Layer *lay
     m_currentColour = previousColor;
 }
 
+void View::RedrawLayerElement(DeviceContext *dc, LayerElement *element, Layer *layer, Staff *staff, Measure *measure)
+{
+    dc->ResumeGraphic(element, element->GetUuid());
+    this->DrawLayerElement(dc, element, layer, staff, measure);
+    dc->EndResumedGraphic(element, this);
+}
+
 //----------------------------------------------------------------------------
 // View - LayerElement
 //----------------------------------------------------------------------------

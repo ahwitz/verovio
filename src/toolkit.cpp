@@ -23,6 +23,7 @@
 #include "measure.h"
 #include "note.h"
 #include "page.h"
+#include "staff.h"
 #include "slur.h"
 #include "style.h"
 #include "svgdevicecontext.h"
@@ -941,7 +942,7 @@ std::string Toolkit::RenderToSvg(int pageNo, bool xml_declaration)
     // Create the SVG object, h & w come from the system
     // We will need to set the size of the page after having drawn it depending on the options
     SvgDeviceContext svg;
-
+    
     if (m_mmOutput) {
         svg.SetMMOutput(true);
     }
@@ -1301,7 +1302,28 @@ bool Toolkit::InsertNote(int octave, std::string pname, std::string parentID)
     note->SetOct(octave);
     
     chord->AddChild(note);
+    
+    LogMessage("aone");
+    
+    Functor prepareLayerElementParts(&Object::PrepareLayerElementParts);
+    chord->Process(&prepareLayerElementParts, NULL);
+    
+    LogMessage("atwo");
+    
+    Page *page = dynamic_cast<Page *>(note->GetFirstParent(PAGE));
+    m_view.SetPage(page->GetIdx() + 1);
+    page->LayOutTranscription(true);
+    
+    LogMessage("athree");
+    
     m_doc.PrepareDrawing();
+
+//    Layer *layer = dynamic_cast<Layer *>(chord->GetFirstParent(LAYER));
+//    Staff *staff = dynamic_cast<Staff *>(chord->GetFirstParent(STAFF));
+//    Measure *measure = dynamic_cast<Measure *>(chord->GetFirstParent(MEASURE));
+    
+    LogMessage("afour");
+    
     return true;
 }
 
