@@ -98,9 +98,7 @@ MeiOutput::MeiOutput(Doc *doc, std::string filename) : FileOutputStream(doc)
     m_scoreBasedMEI = false;
 }
 
-MeiOutput::~MeiOutput()
-{
-}
+MeiOutput::~MeiOutput() {}
 
 bool MeiOutput::ExportFile()
 {
@@ -877,6 +875,7 @@ void MeiOutput::WriteMeasure(pugi::xml_node currentNode, Measure *measure)
 
     WriteXmlId(currentNode, measure);
     measure->WriteMeasureLog(currentNode);
+    measure->WriteMeterConformanceBar(currentNode);
     measure->WriteNNumberLike(currentNode);
     measure->WritePointing(currentNode);
     measure->WriteTyped(currentNode);
@@ -1777,9 +1776,7 @@ MeiInput::MeiInput(Doc *doc, std::string filename) : FileInputStream(doc)
     m_version = MEI_UNDEFINED;
 }
 
-MeiInput::~MeiInput()
-{
-}
+MeiInput::~MeiInput() {}
 
 bool MeiInput::ImportFile()
 {
@@ -2511,7 +2508,7 @@ bool MeiInput::ReadScoreDefElement(pugi::xml_node element, ScoreDefElement *obje
 
 bool MeiInput::ReadScoreDef(Object *parent, pugi::xml_node scoreDef)
 {
-    assert(dynamic_cast<Score *>(parent) || dynamic_cast<Section *>(parent) || dynamic_cast<System *>(parent)
+    assert(dynamic_cast<Score *>(parent) || dynamic_cast<Section *>(parent) || dynamic_cast<System *>(parent) || dynamic_cast<Ending *>(parent)
         || dynamic_cast<EditorialElement *>(parent));
 
     ScoreDef *vrvScoreDef;
@@ -2783,6 +2780,7 @@ bool MeiInput::ReadMeasure(Object *parent, pugi::xml_node measure)
     SetMeiUuid(measure, vrvMeasure);
 
     vrvMeasure->ReadMeasureLog(measure);
+    vrvMeasure->ReadMeterConformanceBar(measure);
     vrvMeasure->ReadNNumberLike(measure);
     vrvMeasure->ReadPointing(measure);
     vrvMeasure->ReadTyped(measure);
@@ -3870,8 +3868,8 @@ bool MeiInput::ReadText(Object *parent, pugi::xml_node text, bool trimLeft, bool
 
     assert(text.text());
     std::wstring str = UTF8to16(text.text().as_string());
-    if (trimLeft) str = MeiInput::LeftTrim(str);
-    if (trimRight) str = MeiInput::RightTrim(str);
+    if (trimLeft) str = this->LeftTrim(str);
+    if (trimRight) str = this->RightTrim(str);
 
     vrvText->SetText(str);
 
