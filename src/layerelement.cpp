@@ -566,6 +566,9 @@ int LayerElement::AlignHorizontally(FunctorParams *functorParams)
     AlignHorizontallyParams *params = dynamic_cast<AlignHorizontallyParams *>(functorParams);
     assert(params);
 
+    
+    if (m_alignment)
+    LogDebug("Element %s %s", this->GetUuid().c_str(), this->GetClassName().c_str());
     assert(!m_alignment);
 
     this->SetScoreDefRole(params->m_scoreDefRole);
