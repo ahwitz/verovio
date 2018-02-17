@@ -893,8 +893,7 @@ bool Toolkit::Edit(const std::string &json_editorAction)
                     }
                 }
                 else if (elementType == "note") {
-                    int octave;
-                    std::string pname, parentID;
+                    std::string octave, pname, parentID;
                     if (this->ParseInsertNoteAction(param, &octave, &pname, &parentID)) {
                         return this->InsertNote(octave, pname, parentID);
                     }
@@ -1270,6 +1269,8 @@ bool Toolkit::Drag(std::string elementId, int x, int y)
             = (data_PITCHNAME)m_view.CalculatePitchCode(layer, m_view.ToLogicalY(y), note->GetDrawingX(), &oct);
         note->SetPname(pname);
         note->SetOct(oct);
+        
+        m_doc.GetDrawingPage()->LayOut(true);
         return true;
     }
     return false;
@@ -1306,7 +1307,7 @@ bool Toolkit::InsertSlur(std::string startid, std::string endid)
     return true;
 }
 
-bool Toolkit::InsertNote(int octave, std::string pname, std::string parentID)
+bool Toolkit::InsertNote(std::string octave, std::string pname, std::string parentID)
 {
     if (!m_doc.GetDrawingPage()) return false;
     
@@ -1325,11 +1326,34 @@ bool Toolkit::InsertNote(int octave, std::string pname, std::string parentID)
     }
     
     Note *note = new Note();
-    note->SetPname(note->ConvertStepToPitchName(pname));
-    note->SetOct(octave);
-    
     chord->AddChild(note);
-    m_doc.PrepareDrawing();
+
+    this->Set(note->GetUuid().c_str(), "pname", pname);
+    this->Set(note->GetUuid().c_str(), "oct", octave);
+    this->Set(note->GetUuid().c_str(), "dur", "4");
+    
+    // m_doc.PrepareDrawing();
+
+    // Page *page = m_doc.GetDrawingPage();
+
+    // LogMessage("pre-1");
+   
+    // m_doc.PrepareDrawing();
+
+    // LogMessage("post-1");
+
+    // // Align the content of the page using measure aligners
+    // // After this:
+    // // - each LayerElement object will have its Alignment pointer initialized
+    // Functor alignHorizontally(&Object::AlignHorizontally);
+    // Functor alignHorizontallyEnd(&Object::AlignHorizontallyEnd);
+    // AlignHorizontallyParams alignHorizontallyParams(&alignHorizontally);
+    // page->Process(&alignHorizontally, &alignHorizontallyParams, &alignHorizontallyEnd);
+
+    // LogMessage("post-2");
+
+    // page->LayOut(true); 
+
     return true;
 }
 
@@ -1350,6 +1374,8 @@ bool Toolkit::Set(std::string elementId, std::string attrType, std::string attrV
     else if (Att::SetPagebased(element, attrType, attrValue)) success = true;
     else if (Att::SetShared(element, attrType, attrValue)) success = true;
     else if (Att::SetVisual(element, attrType, attrValue)) success = true;
+    
+    LogMessage("Set success: %d", success ? 1 : 0);
     if (success) {
         m_doc.PrepareDrawing();
         m_doc.GetDrawingPage()->LayOut(true);
@@ -1379,10 +1405,10 @@ bool Toolkit::ParseInsertSlurAction(jsonxx::Object param, std::string *startid, 
     return true;
 }
     
-bool Toolkit::ParseInsertNoteAction(jsonxx::Object param, int *octave, std::string *pname, std::string *parentID)
+bool Toolkit::ParseInsertNoteAction(jsonxx::Object param, std::string *octave, std::string *pname, std::string *parentID)
 {
-    if (!param.has<jsonxx::Number>("octave")) return false;
-    (*octave) = param.get<jsonxx::Number>("octave");
+    if (!param.has<jsonxx::String>("octave")) return false;
+    (*octave) = param.get<jsonxx::String>("octave");
     if (!param.has<jsonxx::String>("pname")) return false;
     (*pname) = param.get<jsonxx::String>("pname");
     if (!param.has<jsonxx::String>("parentID")) return false;
